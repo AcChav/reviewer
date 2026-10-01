@@ -1,7 +1,7 @@
 import { supabase } from "../config/supabaseClient";
 
 export const notesApi = {
-  // 1. Fetch notes belonging to a specific topic
+  // 1. Fetch active notes belonging to a specific topic
   async getByTopic(topicId) {
     const { data, error } = await supabase
       .from("notes")
@@ -12,13 +12,14 @@ export const notesApi = {
       `
       )
       .eq("topic_id", topicId)
+      .is("deleted_at", null)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
     return data;
   },
 
-  // 2. Fetch single note
+  // 2. Fetch single active note
   async getById(noteId) {
     const { data, error } = await supabase
       .from("notes")
@@ -30,6 +31,7 @@ export const notesApi = {
       `
       )
       .eq("id", noteId)
+      .is("deleted_at", null)
       .single();
 
     if (error) throw error;
@@ -125,10 +127,35 @@ export const notesApi = {
     }
   },
 
-  // 6. Delete note
+  // 6. Soft Delete (default safe delete)
   async delete(id) {
-    const { error } = await supabase.from("notes").delete().eq("id", id);
+    const { data, error } = await supabase
+      .from("notes")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", id)
+      .select()
+      .single();
 
+    if (error) throw error;
+    return data;
+  },
+
+  // 7. Restore soft-deleted note
+  async restore(id) {
+    const { data, error } = await supabase
+      .from("notes")
+      .update({ deleted_at: null })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  // 8. Permanent Hard Delete (if ever needed to permanently purge)
+  async hardDelete(id) {
+    const { error } = await supabase.from("notes").delete().eq("id", id);
     if (error) throw error;
     return true;
   },
