@@ -1,32 +1,35 @@
-import { useState, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { X } from 'lucide-react';
 import NoteMaterialsList from './NoteMaterialsList';
+import MarkdownToolbar from '../common/MarkdownToolbar';
 
 export default function NoteModal({ isOpen, onClose, onSave, initialData = null }) {
-  const [title, setTitle] = useState('');
-  const [primaryLink, setPrimaryLink] = useState('');
-  const [description, setDescription] = useState('');
-  const [myInterpretation, setMyInterpretation] = useState('');
-  const [materials, setMaterials] = useState([]);
+  const [title, setTitle] = useState(initialData?.title || '');
+  const [primaryLink, setPrimaryLink] = useState(initialData?.primary_link || '');
+  const [description, setDescription] = useState(initialData?.description || '');
+  const [myInterpretation, setMyInterpretation] = useState(initialData?.my_interpretation || '');
+  const [materials, setMaterials] = useState(
+    initialData?.supplementary_materials?.map((m) => ({ title: m.title, url: m.url })) || []
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (initialData) {
-      setTitle(initialData.title || '');
-      setPrimaryLink(initialData.primary_link || '');
-      setDescription(initialData.description || '');
-      setMyInterpretation(initialData.my_interpretation || '');
-      setMaterials(
-        initialData.supplementary_materials?.map((m) => ({ title: m.title, url: m.url })) || []
-      );
-    } else {
-      setTitle('');
-      setPrimaryLink('');
-      setDescription('');
-      setMyInterpretation('');
-      setMaterials([]);
+  const descRef = useRef(null);
+  const interpRef = useRef(null);
+
+  // Tab key indent handler (2 spaces)
+  const handleTabKey = (e, val, setVal) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const target = e.target;
+      const start = target.selectionStart;
+      const end = target.selectionEnd;
+      const updated = val.substring(0, start) + '  ' + val.substring(end);
+      setVal(updated);
+      requestAnimationFrame(() => {
+        target.selectionStart = target.selectionEnd = start + 2;
+      });
     }
-  }, [initialData, isOpen]);
+  };
 
   if (!isOpen) return null;
 
@@ -78,7 +81,7 @@ export default function NoteModal({ isOpen, onClose, onSave, initialData = null 
 
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Reference Link (YouTube, Article, or Docs)
+              Reference Link
             </label>
             <input
               type="url"
@@ -89,25 +92,37 @@ export default function NoteModal({ isOpen, onClose, onSave, initialData = null 
             />
           </div>
 
+          {/* Description */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">Description / Summary</label>
+            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              Description / Summary
+            </label>
+            <MarkdownToolbar textareaRef={descRef} value={description} onChange={setDescription} />
             <textarea
-              rows={3}
-              placeholder="Short summary of the learning material..."
+              ref={descRef}
+              rows={4}
+              placeholder="Summary of learning material (supports Markdown, tabs, and spaces)..."
               value={description}
+              onKeyDown={(e) => handleTabKey(e, description, setDescription)}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:border-emerald-500 leading-relaxed"
+              className="w-full px-3.5 py-2.5 rounded-b-lg bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono text-xs leading-relaxed"
             />
           </div>
 
+          {/* Interpretation */}
           <div>
-            <label className="block text-xs font-semibold text-emerald-400 mb-1.5">My Interpretation</label>
+            <label className="block text-xs font-semibold text-emerald-400 mb-1.5">
+              My Interpretation
+            </label>
+            <MarkdownToolbar textareaRef={interpRef} value={myInterpretation} onChange={setMyInterpretation} />
             <textarea
+              ref={interpRef}
               rows={4}
-              placeholder="Your personal take, lessons learned, or rules..."
+              placeholder="Key takeaways, thoughts, or conclusions..."
               value={myInterpretation}
+              onKeyDown={(e) => handleTabKey(e, myInterpretation, setMyInterpretation)}
               onChange={(e) => setMyInterpretation(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-lg bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:border-emerald-500 leading-relaxed"
+              className="w-full px-3.5 py-2.5 rounded-b-lg bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono text-xs leading-relaxed"
             />
           </div>
 

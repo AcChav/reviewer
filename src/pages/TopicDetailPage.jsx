@@ -83,6 +83,7 @@ export default function TopicDetailPage() {
       )}
 
       <NoteModal
+        key={isModalOpen ? "create-note-open" : "create-note-closed"}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSave={handleCreateNote}

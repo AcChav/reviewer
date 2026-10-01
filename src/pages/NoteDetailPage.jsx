@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, ExternalLink, Trash2, Edit3 } from 'lucide-react';
-import { notesApi } from '../api/notesApi';
-import { getYouTubeEmbedUrl } from '../utils/videoParser';
-import ReactMarkdown from 'react-markdown';
-import NoteModal from '../components/notes/NoteModal';
-import ConfirmModal from '../components/common/ConfirmModal';
+import { useEffect, useState } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { ArrowLeft, ExternalLink, Trash2, Edit3 } from "lucide-react";
+import { notesApi } from "../api/notesApi";
+import { getYouTubeEmbedUrl } from "../utils/videoParser";
+import ReactMarkdown from "react-markdown";
+import NoteModal from "../components/notes/NoteModal";
+import ConfirmModal from "../components/common/ConfirmModal";
+import remarkGfm from "remark-gfm";
 
 export default function NoteDetailPage() {
   const { topicId, noteId } = useParams();
@@ -47,12 +48,25 @@ export default function NoteDetailPage() {
     setNote((prev) => ({
       ...prev,
       ...updated,
-      supplementary_materials: updatedData.materials.map((m, i) => ({ id: `temp-${i}`, ...m })),
+      supplementary_materials: updatedData.materials.map((m, i) => ({
+        id: `temp-${i}`,
+        ...m,
+      })),
     }));
   };
 
-  if (loading) return <div className="text-center py-20 text-slate-400 text-sm">Loading note details...</div>;
-  if (error || !note) return <div className="p-4 bg-red-950/40 border border-red-800 text-red-300 rounded-lg text-sm">{error || 'Note not found.'}</div>;
+  if (loading)
+    return (
+      <div className="text-center py-20 text-slate-400 text-sm">
+        Loading note details...
+      </div>
+    );
+  if (error || !note)
+    return (
+      <div className="p-4 bg-red-950/40 border border-red-800 text-red-300 rounded-lg text-sm">
+        {error || "Note not found."}
+      </div>
+    );
 
   const embedUrl = getYouTubeEmbedUrl(note.primary_link);
 
@@ -86,8 +100,12 @@ export default function NoteDetailPage() {
       </div>
 
       <div className="space-y-2">
-        <span className="text-xs text-slate-500">Created on {new Date(note.created_at).toLocaleDateString()}</span>
-        <h1 className="text-3xl font-extrabold text-white tracking-tight">{note.title}</h1>
+        <span className="text-xs text-slate-500">
+          Created on {new Date(note.created_at).toLocaleDateString()}
+        </span>
+        <h1 className="text-3xl font-extrabold text-white tracking-tight">
+          {note.title}
+        </h1>
         {note.primary_link && (
           <a
             href={note.primary_link}
@@ -113,27 +131,39 @@ export default function NoteDetailPage() {
         </div>
       )}
 
+      {/* Description */}
       {note.description && (
         <section className="space-y-2">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">Description / Summary</h2>
-          <div className="text-sm text-slate-300 leading-relaxed rounded-xl bg-slate-900/60 p-5 border border-slate-800">
-            <ReactMarkdown>{note.description}</ReactMarkdown>
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            Description / Summary
+          </h2>
+          <div className="text-sm text-slate-300 leading-relaxed rounded-xl bg-slate-900/60 p-5 border border-slate-800 whitespace-pre-wrap font-sans [&>ul]:list-disc [&>ul]:pl-5 [&>ol]:list-decimal [&>ol]:pl-5 [&>p]:mb-2">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {note.description}
+            </ReactMarkdown>
           </div>
         </section>
       )}
 
+      {/* My Interpretation */}
       {note.my_interpretation && (
         <section className="space-y-2">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-400">My Interpretation</h2>
-          <div className="text-sm text-slate-300 leading-relaxed rounded-xl bg-slate-900/90 border border-emerald-900/40 p-5">
-            <ReactMarkdown>{note.my_interpretation}</ReactMarkdown>
+          <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+            My Interpretation
+          </h2>
+          <div className="text-sm text-slate-300 leading-relaxed rounded-xl bg-slate-900/90 border border-emerald-900/40 p-5 whitespace-pre-wrap font-sans [&>ul]:list-disc [&>ul]:pl-5 [&>ol]:list-decimal [&>ol]:pl-5 [&>p]:mb-2">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {note.my_interpretation}
+            </ReactMarkdown>
           </div>
         </section>
       )}
 
       {note.supplementary_materials?.length > 0 && (
         <section className="space-y-3 pt-4 border-t border-slate-800">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">Other Supplementary Materials</h2>
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            Other Supplementary Materials
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {note.supplementary_materials.map((mat) => (
               <a
@@ -153,6 +183,7 @@ export default function NoteDetailPage() {
 
       {/* Edit Form Modal */}
       <NoteModal
+        key={note?.id || "edit-note"}
         isOpen={isEditModalOpen}
         initialData={note}
         onClose={() => setIsEditModalOpen(false)}
