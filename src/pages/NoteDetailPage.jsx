@@ -132,15 +132,18 @@ export default function NoteDetailPage() {
       )}
 
       {/* Description */}
+      {/* Description */}
       {note.description && (
         <section className="space-y-2">
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
             Description / Summary
           </h2>
-          <div className="text-sm text-slate-300 leading-relaxed rounded-xl bg-slate-900/60 p-5 border border-slate-800 whitespace-pre-wrap font-sans [&>ul]:list-disc [&>ul]:pl-5 [&>ol]:list-decimal [&>ol]:pl-5 [&>p]:mb-2">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {note.description}
-            </ReactMarkdown>
+          <div className="text-sm text-slate-300 rounded-xl bg-slate-900/60 p-5 border border-slate-800">
+            <div className="prose prose-invert prose-sm max-w-none prose-p:my-1 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {note.description}
+              </ReactMarkdown>
+            </div>
           </div>
         </section>
       )}
@@ -151,14 +154,16 @@ export default function NoteDetailPage() {
           <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-400">
             My Interpretation
           </h2>
-          <div className="text-sm text-slate-300 leading-relaxed rounded-xl bg-slate-900/90 border border-emerald-900/40 p-5 whitespace-pre-wrap font-sans [&>ul]:list-disc [&>ul]:pl-5 [&>ol]:list-decimal [&>ol]:pl-5 [&>p]:mb-2">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {note.my_interpretation}
-            </ReactMarkdown>
+          <div className="text-sm text-slate-300 rounded-xl bg-slate-900/90 border border-emerald-900/40 p-5">
+            <div className="prose prose-invert prose-sm max-w-none prose-p:my-1 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {note.my_interpretation}
+              </ReactMarkdown>
+            </div>
           </div>
         </section>
       )}
-
+      
       {note.supplementary_materials?.length > 0 && (
         <section className="space-y-3 pt-4 border-t border-slate-800">
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">

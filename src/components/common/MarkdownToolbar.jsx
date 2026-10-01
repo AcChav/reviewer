@@ -1,7 +1,8 @@
-import { Bold, Italic, List, ListOrdered, Code } from 'lucide-react';
+import { Bold, Italic, List, ListOrdered, Code } from "lucide-react";
 
 export default function MarkdownToolbar({ textareaRef, value, onChange }) {
-  const insertFormatting = (prefix, suffix = '', defaultPlaceholder = '') => {
+  // Wraps inline text (e.g. **bold**, *italic*, `code`)
+  const insertInline = (prefix, suffix = "", defaultPlaceholder = "") => {
     const textarea = textareaRef.current;
     if (!textarea) return;
 
@@ -9,13 +10,12 @@ export default function MarkdownToolbar({ textareaRef, value, onChange }) {
     const end = textarea.selectionEnd;
     const selectedText = value.substring(start, end) || defaultPlaceholder;
 
-    // Build replacement text
     const replacement = `${prefix}${selectedText}${suffix}`;
-    const nextValue = value.substring(0, start) + replacement + value.substring(end);
+    const nextValue =
+      value.substring(0, start) + replacement + value.substring(end);
 
     onChange(nextValue);
 
-    // Re-focus and set selection
     requestAnimationFrame(() => {
       textarea.focus();
       const newCursorStart = start + prefix.length;
@@ -24,11 +24,50 @@ export default function MarkdownToolbar({ textareaRef, value, onChange }) {
     });
   };
 
+  // Formats each line into a list item across multi-line selections
+  const insertList = (ordered = false) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = value.substring(start, end);
+
+    let replacement = "";
+
+    if (!selectedText) {
+      // Nothing selected: insert a single list item
+      replacement = ordered ? "1. Item\n" : "- Item\n";
+    } else {
+      // Split every line in the selection and prefix each non-empty line
+      const lines = selectedText.split("\n");
+      let counter = 1;
+      replacement = lines
+        .map((line) => {
+          if (!line.trim()) return line; // preserve blank lines
+          const prefix = ordered ? `${counter++}. ` : "- ";
+          // If the line already starts with a bullet or number, clean it first
+          const cleaned = line.replace(/^([-*+]|\d+\.)\s+/, "");
+          return `${prefix}${cleaned}`;
+        })
+        .join("\n");
+    }
+
+    const nextValue =
+      value.substring(0, start) + replacement + value.substring(end);
+    onChange(nextValue);
+
+    requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start, start + replacement.length);
+    });
+  };
+
   return (
     <div className="flex items-center gap-1 p-1 bg-slate-950 border border-b-0 border-slate-800 rounded-t-lg">
       <button
         type="button"
-        onClick={() => insertFormatting('**', '**', 'bold text')}
+        onClick={() => insertInline("**", "**", "bold text")}
         className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded transition"
         title="Bold"
       >
@@ -36,7 +75,7 @@ export default function MarkdownToolbar({ textareaRef, value, onChange }) {
       </button>
       <button
         type="button"
-        onClick={() => insertFormatting('*', '*', 'italic text')}
+        onClick={() => insertInline("*", "*", "italic text")}
         className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded transition"
         title="Italic"
       >
@@ -45,7 +84,7 @@ export default function MarkdownToolbar({ textareaRef, value, onChange }) {
       <div className="h-4 w-[1px] bg-slate-800 mx-1" />
       <button
         type="button"
-        onClick={() => insertFormatting('\n- ', '', 'List item')}
+        onClick={() => insertList(false)}
         className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded transition"
         title="Bullet List"
       >
@@ -53,7 +92,7 @@ export default function MarkdownToolbar({ textareaRef, value, onChange }) {
       </button>
       <button
         type="button"
-        onClick={() => insertFormatting('\n1. ', '', 'First item')}
+        onClick={() => insertList(true)}
         className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded transition"
         title="Numbered List"
       >
@@ -61,7 +100,7 @@ export default function MarkdownToolbar({ textareaRef, value, onChange }) {
       </button>
       <button
         type="button"
-        onClick={() => insertFormatting('`', '`', 'code')}
+        onClick={() => insertInline("`", "`", "code")}
         className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded transition"
         title="Inline Code"
       >
