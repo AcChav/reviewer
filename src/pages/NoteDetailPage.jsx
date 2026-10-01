@@ -132,7 +132,6 @@ export default function NoteDetailPage() {
       )}
 
       {/* Description */}
-      {/* Description */}
       {note.description && (
         <section className="space-y-2">
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
@@ -163,7 +162,7 @@ export default function NoteDetailPage() {
           </div>
         </section>
       )}
-      
+
       {note.supplementary_materials?.length > 0 && (
         <section className="space-y-3 pt-4 border-t border-slate-800">
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
