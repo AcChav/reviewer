@@ -8,9 +8,23 @@ export default function MarkdownToolbar({ textareaRef, value, onChange }) {
 
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
-    const selectedText = value.substring(start, end) || defaultPlaceholder;
+    const rawSelected = value.substring(start, end) || defaultPlaceholder;
 
-    const replacement = `${prefix}${selectedText}${suffix}`;
+    // Detect leading and trailing whitespace
+    const leadingSpace = rawSelected.match(/^\s*/)[0];
+    const trailingSpace = rawSelected.match(/\s*$/)[0];
+    const coreText = rawSelected.trim();
+
+    if (!coreText) {
+      const replacement = `${prefix}${defaultPlaceholder}${suffix}`;
+      const nextValue =
+        value.substring(0, start) + replacement + value.substring(end);
+      onChange(nextValue);
+      return;
+    }
+
+    // Place asterisks snugly around the core word, pushing spaces to the outside
+    const replacement = `${leadingSpace}${prefix}${coreText}${suffix}${trailingSpace}`;
     const nextValue =
       value.substring(0, start) + replacement + value.substring(end);
 
@@ -18,8 +32,8 @@ export default function MarkdownToolbar({ textareaRef, value, onChange }) {
 
     requestAnimationFrame(() => {
       textarea.focus();
-      const newCursorStart = start + prefix.length;
-      const newCursorEnd = newCursorStart + selectedText.length;
+      const newCursorStart = start + leadingSpace.length + prefix.length;
+      const newCursorEnd = newCursorStart + coreText.length;
       textarea.setSelectionRange(newCursorStart, newCursorEnd);
     });
   };
